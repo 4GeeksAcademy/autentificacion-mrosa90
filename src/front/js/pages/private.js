@@ -1,25 +1,48 @@
-import React, { useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useContext, useEffect } from "react";
 import { Context } from "../store/appContext";
+import "../../styles/home.css";
+import { useNavigate } from "react-router-dom";
 
-export const Private = () => {
-  const { store, actions } = useContext(Context);
-  const navigate = useNavigate();
 
-  const handleLogout = () => {
-    actions.getLogout(navigate);
-  };
+const Private = () => {
+	const navigate = useNavigate();
 
+	const authentication = async () => {
+		const token = JSON.parse(localStorage.getItem("token"))
+		const access_key = token.access_token
+		if (!access_key) {
+			navigate(`/login`)
+			return;
+		}
+		try {
+			const response = await fetch(`${process.env.BACKEND_URL}/protected`, {
+				method: "GET",
+				headers: { "Authorization": `Bearer ${access_key}` }
+			});
+			if (!response.ok) {
+        if (response.status === 401) {
+					console.log("Not authorized. Redirecting to login...");
+					navigate(`/login`)
+				} else {
+					console.error("Error:", response.status);
+				}
+				return;
+			}
+			const data = await response.json();
+			const authorizerUser = data.logged_in_as;
+		} catch (error) {
+			console.error(error);
+			navigate(`/login`)
+		}
+	}
+	useEffect(() => {
+		authentication();
+	}, [])
   return (
-    <div className="text-center mt-5">
-      <h1>Private</h1>
-      <p>You are logged in</p>
-      <Link to="/">
-        <button>Go to home</button>
-      </Link>
-      <button onClick={handleLogout}>Logout</button>
-    </div>
-  );
+		<>
+			<h1>You have access</h1>
+		</>
+	);
 };
 
 export default Private;

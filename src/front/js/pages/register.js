@@ -1,63 +1,92 @@
-import React from "react";
+import React, { useState , useContext} from "react";
 import { Link } from "react-router-dom";
-import { useState, useContext, useEffect } from "react";
-import { Context } from "../store/appContext";
+import Swal from 'sweetalert2';
 
-export const Register = () => {
-  console.log(email, password);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export const Registro = () => {
+   
 
-  const { actions } = useContext(Context);
+      const [email,setEmail]= useState('')
+      const [password,setPassword]= useState(null)
+      const [confirmPassword,setConfirmPassword]= useState('')
 
-  useEffect(() => {
-    actions.getCrearUsuario();
-    
-  }, []);
 
-  return (
-    <div className="text-center mt-5">
-      <h1>register</h1>
-      <p> You need to register to access the content</p>
 
-      <form>
-        <div className="container">
-          <div className="form-group">
-            <label htmlFor="exampleInputEmail1">Email address</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="form-control"
-              id="exampleInputEmail1"
-              aria-describedby="emailHelp"
-            />
-            <small id="emailHelp" className="form-text text-muted"></small>
-          </div>
-          <div className="form-group">
-            <label htmlFor="exampleInputPassword1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="form-control"
-              id="exampleInputPassword1"
-            />
-          </div>
+      const handleChangeEmail = (e) =>{
+        setEmail(e.target.value)
+      }
+
+      const handleChangePassword = (e) =>{
+        setPassword(e.target.value)
+      }
+      const handleChangeConfirm = (e) =>{
+        setConfirmPassword(e.target.value)
+      }
+
+        
+     const sendFormData = (email,password) => {
+          fetch(`${process.env.BACKEND_URL}/user`, {
+            method: "POST",
+            body: JSON.stringify({
+                "email":email,
+                "password":password,
+                "rol":"user"
+            }),
+            headers: { "Content-Type": "application/json" }
+          })
+            .then(response => response.json())
+            .then(response => console.log(response))
+            .then(response => Swal.fire({
+              title: "Bienvenido",
+              text: "Usuario registrado correctamente",
+              icon: "success"
+            }))
+            .catch(error => Swal.fire({
+              title: "Error",
+              text: "No ha sido posible registrar el usuario",
+              icon: "error"
+            })) 
+        }
+        const handleSubmit = (e) => {
+          e.preventDefault();
+          if (password === confirmPassword) {
+              sendFormData(email,password)
+              setEmail("");
+              setPassword("");
+              setConfirmPassword("");
+          }else{
+            Swal.fire({
+              title: "Error",
+              text: "La contraseña no coincide",
+              icon: "error"
+            }) 
+          }
+          
+  
+      };
+      return( 
+
+        <div>
+             <h2>Registro</h2>
+            <form onSubmit={handleSubmit} className="needs-validation" noValidate>
+                <div>
+                    <label htmlFor="emailId" className="form-label"></label>
+                    <input type="email" name="email" value={email} onChange={handleChangeEmail} id="emailId"placeholder="Email" required/>
+                </div>
+                <div>
+                    <label htmlFor="passwordId" className="form-label"></label>
+                    <input type="password" name="password" value={password} onChange={handleChangePassword} id="passwordId"placeholder="Contraseña" required/>
+                </div>
+                <div>
+                    <label htmlFor="password1Id" className="form-label"></label>
+                    <input type="password" name="confirmPassword" value={confirmPassword} onChange={handleChangeConfirm} id="password1Id" placeholder="Repetir contraseña" required/>
+                 </div>
+                    <button type="submit">Registrarse  <i className="fas fa-long-arrow-alt-right"></i></button>
+                   <Link to="/login">
+                      <div>¿Ya eres usuario? Accede</div>
+                  </Link>
+                  </form>
         </div>
-      </form>
-      <Link to="">
-        <button onClick={() => {
-    
-     
-          alert("Usuario creado, ya puedes iniciar sesión en la página home");
-          actions.getCrearUsuario(email, password)}}>
-          REGISTRARSE
-        </button>
-      </Link>
-    </div>
-  );
+    );
 };
-
-export default Register;
+export default Registro
